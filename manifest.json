@@ -26,6 +26,10 @@
     "19": "icons/icon19.png",
     "16": "icons/icon16.png"
   },
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": true
+  },
   "permissions": [
     "contentSettings",
     "storage",
