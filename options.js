@@ -29,7 +29,7 @@ const render = () => {
 };
 
 const onValueChange = ({target: {name, value}}) =>
-  chrome.storage.sync.set({[name]: value});
+  chrome.storage.local.set({[name]: value});
 
 
 const subscribe = () =>
@@ -37,10 +37,10 @@ const subscribe = () =>
 
 
 const restoreSettings = () =>
-  chrome.storage.sync.get(null, opts => {
+  chrome.storage.local.get(null, opts => {
     const toRemove = Object.keys(opts).filter(key => !(key in options));
     if (toRemove.length > 0) {
-      chrome.storage.sync.remove(toRemove);
+      chrome.storage.local.remove(toRemove);
     }
     Object.keys(options).forEach(key => Object.assign(options, {[key]: opts[key]}));
     render();

@@ -23,7 +23,7 @@ const maybeRender = () => {
 
 
 const restoreSettings = () =>
-  chrome.storage.sync.get(null, opts => {
+  chrome.storage.local.get(null, opts => {
     Object.assign(options, opts);
     maybeRender();
   });
