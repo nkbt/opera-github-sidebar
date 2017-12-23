@@ -1,0 +1,35 @@
+{
+  "name": "Github",
+  "description": "Opera sidebar plugin for Github",
+  "developer": {
+    "name": "Nik Butenko",
+    "email": "nik@butenko.me",
+    "url": "https://gihub.com/nkbt"
+  },
+  "manifest_version": 2,
+  "version": "0.0.0",
+  "minimum_opera_version": "30",
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "sidebar_action": {
+    "default_icon": "icons/icon19.png",
+    "default_title": "Github",
+    "default_panel": "sidebar.html"
+  },
+  "icons": {
+    "128": "icons/icon128.png",
+    "64": "icons/icon64.png",
+    "48": "icons/icon48.png",
+    "38": "icons/icon38.png",
+    "32": "icons/icon32.png",
+    "19": "icons/icon19.png",
+    "16": "icons/icon16.png"
+  },
+  "permissions": [
+    "contentSettings",
+    "storage",
+    "tabs"
+  ],
+  "content_security_policy": "script-src 'self'; object-src 'self';"
+}

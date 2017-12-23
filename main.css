@@ -1,0 +1,23 @@
+html {
+  font-family: "Helvetica Neue", Arial, serif;
+  overflow: hidden;
+}
+
+body {
+  padding: 1em;
+  overflow: hidden;
+  margin: 0;
+}
+
+[data-options] {
+  max-width: 20em;
+}
+
+label {
+  display: block;
+  text-align: right;
+}
+
+label + label {
+  margin-top: 0.5em;
+}
