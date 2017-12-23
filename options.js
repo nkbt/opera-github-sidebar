@@ -7,13 +7,17 @@ const options = {
 };
 
 
+const hide = ['token'];
+
+
 const render = () => {
   Object.keys(options).forEach(key => {
     let input = e(`[data-options] [data-options="${key}"] input`);
     if (!input) {
       const label = document.createElement('label');
       label.dataset.options = key;
-      label.innerHTML = `${key}: <input type="text" name="${key}" value=""/>`;
+      const type = hide.includes(key) ? 'password' : 'text';
+      label.innerHTML = `${key}: <input type="${type}" name="${key}" value="" />`;
       e('[data-options]').appendChild(label);
       input = label.querySelector('input');
     }
@@ -51,5 +55,5 @@ window.addEventListener('load', restoreSettings, false);
 chrome.storage.onChanged.addListener(updateSettings);
 
 window.addEventListener('load', subscribe, false);
-window.addEventListener('load', maybeRender, false);
-chrome.storage.onChanged.addListener(maybeRender);
+window.addEventListener('load', render, false);
+chrome.storage.onChanged.addListener(render);
