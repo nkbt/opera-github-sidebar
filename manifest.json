@@ -9,9 +9,6 @@
   "manifest_version": 2,
   "version": "0.0.0",
   "minimum_opera_version": "30",
-  "background": {
-    "scripts": ["background.js"]
-  },
   "sidebar_action": {
     "default_icon": "icons/icon19.png",
     "default_title": "Github",
@@ -25,6 +22,10 @@
     "32": "icons/icon32.png",
     "19": "icons/icon19.png",
     "16": "icons/icon16.png"
+  },
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": true
   },
   "permissions": [
     "contentSettings",
