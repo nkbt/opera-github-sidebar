@@ -9,9 +9,6 @@
   "manifest_version": 2,
   "version": "0.0.0",
   "minimum_opera_version": "30",
-  "background": {
-    "scripts": ["background.js"]
-  },
   "sidebar_action": {
     "default_icon": "icons/icon19.png",
     "default_title": "Github",
