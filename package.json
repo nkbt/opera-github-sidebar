@@ -1,6 +1,26 @@
 {
+  "name": "opera-github-sidebar",
+  "version": "0.0.0",
+  "private": true,
+  "author": "Nik Butenko <nik@butenko.me>",
+  "license": "MIT",
+  "description": "Opera sidebar plugin for Github",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/packetloop/adam-ui.git"
+  },
+  "scripts": {
+    "lint": "echo No lint",
+    "test": "echo No test",
+    "crx": "crx"
+  },
   "dependencies": {
+    "crx": "^3.2.1",
     "react": "^16.2.0",
     "react-dom": "^16.2.0"
-  }
+  },
+  "files": [
+    "README.md"
+  ]
 }

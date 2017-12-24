@@ -1,0 +1,130 @@
+version: 2
+
+
+jobs:
+  install:
+    working_directory: ~/app
+    docker:
+      - image: circleci/node:8.7.0
+    steps:
+      - checkout
+
+
+      - restore_cache:
+          key: app-deps-{{ checksum "yarn.lock" }}
+
+
+      - run:
+          name: Install dependencies
+          command: yarn install --pure-lockfile
+
+
+      - save_cache:
+          key: app-deps-{{ checksum "yarn.lock" }}
+          paths:
+            - node_modules
+
+
+      - save_cache:
+          key: app-{{ .Revision }}
+          paths:
+            - ./
+
+
+  lint:
+    working_directory: ~/app
+    docker:
+      - image: circleci/node:8.7.0
+    steps:
+      - restore_cache:
+          key: app-{{ .Revision }}
+      - run: yarn lint
+
+
+  test:
+    working_directory: ~/app
+    docker:
+      - image: circleci/node:8.7.0
+    steps:
+      - restore_cache:
+          key: app-{{ .Revision }}
+      - run: yarn test
+
+
+  build:
+    working_directory: ~/app
+    docker:
+      - image: circleci/node:8.7.0
+    steps:
+      - restore_cache:
+          key: app-{{ .Revision }}
+
+
+      - add_ssh_keys:
+          fingerprints:
+            - "84:5c:3d:17:34:c8:9a:ba:01:2d:3c:7b:87:86:07:0e"
+
+
+      - run:
+          name: Maybe tag
+          command: |
+            MAYBE_TAG=$(git log -1 --pretty=%B)
+            if [[ $MAYBE_TAG =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+              echo "export CIRCLE_TAG='$MAYBE_TAG'" >> $BASH_ENV
+              echo "Exported CIRCLE_TAG='$MAYBE_TAG'"
+            else
+              echo "export CIRCLE_TAG='build-$CIRCLE_BUILD_NUM'" >> $BASH_ENV
+              echo "Exported CIRCLE_TAG='build-$CIRCLE_BUILD_NUM'"
+            fi
+
+
+      - run:
+          name: Build
+          command: |
+            # Cleanup build
+            rm -rf ./build
+            mkdir -p ./build
+
+            # Copy all extension files
+            cp -r icons ./build/
+            cp LICENSE ./build/
+            cp main.css ./build/
+            cp manifest.json ./build/
+            cp options.html ./build/
+            cp options.js ./build/
+            cp optionsStore.js ./build/
+            cp README.md ./build/
+            cp sidebar.html ./build/
+            cp sidebar.js ./build/
+            mkdir -p build/node_modules/react/umd/
+            cp node_modules/react/umd/react.production.min.js ./build/node_modules/react/umd/react.development.js
+            mkdir -p build/node_modules/react-dom/umd/
+            cp node_modules/react-dom/umd/react-dom.production.min.js ./build/node_modules/react-dom/umd/react-dom.development.js
+
+            # Pack into CRX
+            yarn crx pack ./build -o ./ext.crx -p ~/.ssh/id_rsa_845c3d1734c89aba012d3c7b8786070e
+
+            # Store artifact as NEX
+            mkdir -p /tmp/artifacts
+            mv ./ext.crx /tmp/artifacts/${CIRCLE_PROJECT_REPONAME}-${CIRCLE_TAG}.nex
+
+
+      - store_artifacts:
+          path: /tmp/artifacts
+          destination: build
+
+
+workflows:
+  version: 2
+  build:
+    jobs:
+      - install
+      - lint:
+          requires:
+            - install
+      - test:
+          requires:
+            - install
+      - build:
+          requires:
+            - install
