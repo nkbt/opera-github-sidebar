@@ -60,6 +60,11 @@ jobs:
           key: app-{{ .Revision }}
 
 
+      - add_ssh_keys:
+          fingerprints:
+            - "84:5c:3d:17:34:c8:9a:ba:01:2d:3c:7b:87:86:07:0e"
+
+
       - run:
           name: Maybe tag
           command: |
