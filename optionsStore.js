@@ -1,12 +1,13 @@
+const SUPPORTED = ['token'];
+
+
 const optionsStore = (onChange = () => null) => {
   // Initial state
-  const options = {
-    token: ''
-  };
+  const options = SUPPORTED.reduce((memo, key) => Object.assign(memo, {[key]: ''}), {});
 
   const restoreSettings = () =>
     chrome.storage.local.get(null, opts => {
-      const toRemove = Object.keys(opts).filter(key => !(key in options));
+      const toRemove = Object.keys(opts).filter(key => !SUPPORTED.includes(key));
       if (toRemove.length > 0) {
         chrome.storage.local.remove(toRemove);
       }

@@ -1,39 +1,60 @@
-const onLoad = () => {
-  const state = {
-    options: {},
-    url: ''
-  };
+const e = (...args) => React.createElement(...args);
+const F = React.Fragment;
 
 
-  const render = () => {
-    document.querySelector('[data-app]').innerHTML = state.url;
-  };
+class App extends React.Component {
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      options: {},
+      url: ''
+    };
+    this.onOptionsChange = this.onOptionsChange.bind(this);
+    this.onTabChange = this.onTabChange.bind(this);
+  }
 
 
-  const onTabMatch = ([{url = ''} = {}]) => {
-    Object.assign(state, {url});
-    render();
-  };
+  componentDidMount() {
+    this.unsubscribe = optionsStore(this.onOptionsChange);
+    chrome.tabs.onUpdated.addListener(this.onTabChange);
+    chrome.tabs.onActivated.addListener(this.onTabChange);
+  }
 
 
-  const onTabChange = () =>
+  componentWillUnmount() {
+    this.unsubscribe();
+    chrome.tabs.onUpdated.removeListener(this.onTabChange);
+    chrome.tabs.onActivated.removeListener(this.onTabChange);
+  }
+
+
+  onOptionsChange(options) {
+    this.setState({options})
+  }
+
+
+  onTabChange() {
     chrome.tabs.query({
       'currentWindow': true,
       'active': true,
       'url': 'https://github.com/*'
-    }, onTabMatch);
+    }, ([{url = ''} = {}]) => this.setState({url}));
+  }
 
 
-  const onOptionsChange = options => {
-    Object.assign(state, {options});
-    render();
-  };
+  render() {
+    const {url} = this.state;
+
+    return e(F, {},
+      e('h1', {}, 'Github'),
+      e('div', {}, url)
+    );
+  }
+}
 
 
-  optionsStore(onOptionsChange);
-  chrome.tabs.onUpdated.addListener(onTabChange);
-  chrome.tabs.onActivated.addListener(onTabChange);
-};
+const onLoad = () => ReactDOM.render(e(App, {}), document.querySelector('[data-app]'));
 
 
 window.addEventListener('load', onLoad, false);
