@@ -1,42 +1,39 @@
-const e = (...args) => document.querySelector(...args);
+const onLoad = () => {
+  const state = {
+    options: {},
+    url: ''
+  };
 
 
-const options = {
+  const render = () => {
+    document.querySelector('[data-app]').innerHTML = state.url;
+  };
+
+
+  const onTabMatch = ([{url = ''} = {}]) => {
+    Object.assign(state, {url});
+    render();
+  };
+
+
+  const onTabChange = () =>
+    chrome.tabs.query({
+      'currentWindow': true,
+      'active': true,
+      'url': 'https://github.com/*'
+    }, onTabMatch);
+
+
+  const onOptionsChange = options => {
+    Object.assign(state, {options});
+    render();
+  };
+
+
+  optionsStore(onOptionsChange);
+  chrome.tabs.onUpdated.addListener(onTabChange);
+  chrome.tabs.onActivated.addListener(onTabChange);
 };
 
 
-const render = url => {
-  e('[data-app]').innerHTML = url;
-};
-
-
-const maybeRender = () => {
-  if (!Object.keys(options).length) {
-    return;
-  }
-  chrome.tabs.query({
-    'currentWindow': true,
-    'active': true,
-    'url': 'https://github.com/*'
-  }, ([{url} = {}]) => url && render(url));
-};
-
-
-const restoreSettings = () =>
-  chrome.storage.sync.get(null, opts => {
-    Object.assign(options, opts);
-    maybeRender();
-  });
-
-
-const updateSettings = changes => {
-  Object.keys(changes).forEach(key => Object.assign(options, {[key]: changes[key].newValue}));
-  maybeRender();
-};
-
-
-window.addEventListener('load', restoreSettings, false);
-chrome.storage.onChanged.addListener(updateSettings);
-
-chrome.tabs.onUpdated.addListener(maybeRender);
-chrome.tabs.onActivated.addListener(maybeRender);
+window.addEventListener('load', onLoad, false);
