@@ -13,7 +13,6 @@
   "scripts": {
     "lint": "echo No lint",
     "test": "echo No test",
-    "build": "echo No build",
     "crx": "crx"
   },
   "dependencies": {

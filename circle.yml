@@ -70,13 +70,49 @@ jobs:
           command: |
             MAYBE_TAG=$(git log -1 --pretty=%B)
             if [[ $MAYBE_TAG =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-
               echo "export CIRCLE_TAG='$MAYBE_TAG'" >> $BASH_ENV
               echo "Exported CIRCLE_TAG='$MAYBE_TAG'"
+            else
+              echo "export CIRCLE_TAG='build-$CIRCLE_BUILD_NUM'" >> $BASH_ENV
+              echo "Exported CIRCLE_TAG='build-$CIRCLE_BUILD_NUM'"
             fi
 
 
-      - run: yarn build
+      - run:
+          name: Build
+          command: |
+            # Cleanup build
+            rm -rf ./build
+            mkdir -p ./build
+
+            # Copy all extension files
+            cp -r icons ./build/
+            cp LICENSE ./build/
+            cp main.css ./build/
+            cp manifest.json ./build/
+            cp options.html ./build/
+            cp options.js ./build/
+            cp optionsStore.js ./build/
+            cp README.md ./build/
+            cp sidebar.html ./build/
+            cp sidebar.js ./build/
+            mkdir -p build/node_modules/react/umd/
+            cp node_modules/react/umd/react.production.min.js ./build/node_modules/react/umd/react.development.js
+            mkdir -p build/node_modules/react-dom/umd/
+            cp node_modules/react-dom/umd/react-dom.production.min.js ./build/node_modules/react-dom/umd/react-dom.development.js
+
+            # Pack into CRX
+            yarn crx pack ./build -o ./ext.crx -p ~/.ssh/id_rsa_845c3d1734c89aba012d3c7b8786070e
+
+            # Store artifact as NEX
+            mkdir -p /tmp/artifacts
+            mv ./ext.crx /tmp/artifacts/${CIRCLE_PROJECT_REPONAME}-${CIRCLE_TAG}.nex
+
+
+      - store_artifacts:
+          path: /tmp/artifacts
+          destination: build
+
 
 workflows:
   version: 2
