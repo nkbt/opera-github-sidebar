@@ -1,59 +1,80 @@
-const e = (...args) => document.querySelector(...args);
+const onLoad = () => {
+  const state = {
+    options: {}
+  };
 
 
-// Initial state
-const options = {
-  token: ''
-};
+  const supportedOptions = ['token'];
+  const asPassword = ['token'];
 
 
-const hide = ['token'];
+  const onValueChange = ({target: {name, value}}) => console.log(`name,value`, name,value) ||
+    chrome.storage.local.set({[name]: value});
 
 
-const render = () => {
-  Object.keys(options).forEach(key => {
-    let input = e(`[data-options] [data-options="${key}"] input`);
-    if (!input) {
-      const label = document.createElement('label');
-      label.dataset.options = key;
-      const type = hide.includes(key) ? 'password' : 'text';
-      label.innerHTML = `${key}: <input type="${type}" name="${key}" value="" />`;
-      e('[data-options]').appendChild(label);
-      input = label.querySelector('input');
-    }
+  const removeUnsupportedOptions = () => new Promise(resolve => {
+    const container = document.querySelector(`[data-options]`);
 
-    if (input.value !== options[key]) {
-      input.value = options[key];
-    }
+    [...container.querySelectorAll(`label[data-options]`)]
+      .filter(label => !supportedOptions.includes(label.dataset.options))
+      .forEach(label => container.removeChild(label));
+
+    setTimeout(resolve);
   });
-};
-
-const onValueChange = ({target: {name, value}}) =>
-  chrome.storage.local.set({[name]: value});
 
 
-const subscribe = () =>
-  e(`[data-options]`).addEventListener('keyup', onValueChange, false);
+  const addMissingOptions = () => new Promise(resolve => {
+    const container = document.querySelector(`[data-options]`);
+
+    const labels = supportedOptions
+      .map(key => {
+        let label = container.querySelector(`label[data-options="${key}"]`);
+        if (!label) {
+          label = document.createElement('label');
+          label.dataset.options = key;
+          const type = asPassword.includes(key) ? 'password' : 'text';
+          label.innerHTML = `${key}: <input type="${type}" name="${key}" value="" />`;
+          const input = label.querySelector('input');
+          input.addEventListener('change', onValueChange, false);
+        }
+        return label;
+      });
+
+    labels.forEach(label => container.appendChild(label));
+
+    setTimeout(resolve);
+  });
 
 
-const restoreSettings = () =>
-  chrome.storage.local.get(null, opts => {
-    const toRemove = Object.keys(opts).filter(key => !(key in options));
-    if (toRemove.length > 0) {
-      chrome.storage.local.remove(toRemove);
-    }
-    Object.keys(options).forEach(key => Object.assign(options, {[key]: opts[key]}));
+  const updateValues = () => new Promise(resolve => {
+    const container = document.querySelector(`[data-options]`);
+
+    const inputs = supportedOptions
+      .map(key => container.querySelector(`input[name="${key}"]`))
+      .filter(input => input && input.value !== state.options[input.name]);
+
+    inputs
+      .forEach(input => (input.value = state.options[input.name]))
+
+    setTimeout(resolve);
+  });
+
+
+  const render = async () => {
+    await removeUnsupportedOptions();
+    await addMissingOptions();
+    await updateValues();
+  };
+
+
+  const onOptionsChange = options => {
+    Object.assign(state, {options});
     render();
-  });
+  };
 
 
-const updateSettings = changes =>
-  Object.keys(changes).forEach(key => Object.assign(options, {[key]: changes[key].newValue}));
+  optionsStore(onOptionsChange);
+};
 
 
-window.addEventListener('load', restoreSettings, false);
-chrome.storage.onChanged.addListener(updateSettings);
-
-window.addEventListener('load', subscribe, false);
-window.addEventListener('load', render, false);
-chrome.storage.onChanged.addListener(render);
+window.addEventListener('load', onLoad, false);
