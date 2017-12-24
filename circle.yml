@@ -1,0 +1,89 @@
+version: 2
+
+
+jobs:
+  install:
+    working_directory: ~/app
+    docker:
+      - image: circleci/node:8.7.0
+    steps:
+      - checkout
+
+
+      - restore_cache:
+          key: app-deps-{{ checksum "yarn.lock" }}
+
+
+      - run:
+          name: Install dependencies
+          command: yarn install --pure-lockfile
+
+
+      - save_cache:
+          key: app-deps-{{ checksum "yarn.lock" }}
+          paths:
+            - node_modules
+
+
+      - save_cache:
+          key: app-{{ .Revision }}
+          paths:
+            - ./
+
+
+  lint:
+    working_directory: ~/app
+    docker:
+      - image: circleci/node:8.7.0
+    steps:
+      - restore_cache:
+          key: app-{{ .Revision }}
+      - run: yarn lint
+
+
+  test:
+    working_directory: ~/app
+    docker:
+      - image: circleci/node:8.7.0
+    steps:
+      - restore_cache:
+          key: app-{{ .Revision }}
+      - run: yarn test
+
+
+  build:
+    working_directory: ~/app
+    docker:
+      - image: circleci/node:8.7.0
+    steps:
+      - restore_cache:
+          key: app-{{ .Revision }}
+
+
+      - run:
+          name: Maybe tag
+          command: |
+            MAYBE_TAG=$(git log -1 --pretty=%B)
+            if [[ $MAYBE_TAG =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+
+              echo "export CIRCLE_TAG='$MAYBE_TAG'" >> $BASH_ENV
+              echo "Exported CIRCLE_TAG='$MAYBE_TAG'"
+            fi
+
+
+      - run: yarn build
+
+workflows:
+  version: 2
+  build:
+    jobs:
+      - install
+      - lint:
+          requires:
+            - install
+      - test:
+          requires:
+            - install
+      - build:
+          requires:
+            - install
