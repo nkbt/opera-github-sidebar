@@ -9,15 +9,16 @@ body {
   margin: 0;
 }
 
-[data-options] {
+.options-label {
+  display: block;
+  text-align: right;
   max-width: 20em;
 }
 
-label {
-  display: block;
-  text-align: right;
+.options-label + .options-label {
+  margin-top: 0.5em;
 }
 
-label + label {
-  margin-top: 0.5em;
+.options-label input {
+  margin-left: 0.5em;
 }

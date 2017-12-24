@@ -1,80 +1,65 @@
-const onLoad = () => {
-  const state = {
-    options: {}
-  };
+const e = (...args) => React.createElement(...args);
+const F = React.Fragment;
 
 
-  const supportedOptions = ['token'];
-  const asPassword = ['token'];
+const Input = ({name, value, asPassword}) => e('input', {
+  type: asPassword.includes(name) ? 'password' : 'text',
+  value,
+  onChange: event => chrome.storage.local.set({[name]: event.target.value})
+});
 
 
-  const onValueChange = ({target: {name, value}}) => console.log(`name,value`, name,value) ||
-    chrome.storage.local.set({[name]: value});
+const Option = props => e('label', {className: 'options-label'},
+  e(F, {},
+    e('span', {}, props.name),
+    e(Input, props)
+  ));
 
 
-  const removeUnsupportedOptions = () => new Promise(resolve => {
-    const container = document.querySelector(`[data-options]`);
+class App extends React.Component {
+  constructor(props) {
+    super(props);
 
-    [...container.querySelectorAll(`label[data-options]`)]
-      .filter(label => !supportedOptions.includes(label.dataset.options))
-      .forEach(label => container.removeChild(label));
-
-    setTimeout(resolve);
-  });
+    this.state = {};
+    this.onOptionsChange = this.onOptionsChange.bind(this);
+  }
 
 
-  const addMissingOptions = () => new Promise(resolve => {
-    const container = document.querySelector(`[data-options]`);
-
-    const labels = supportedOptions
-      .map(key => {
-        let label = container.querySelector(`label[data-options="${key}"]`);
-        if (!label) {
-          label = document.createElement('label');
-          label.dataset.options = key;
-          const type = asPassword.includes(key) ? 'password' : 'text';
-          label.innerHTML = `${key}: <input type="${type}" name="${key}" value="" />`;
-          const input = label.querySelector('input');
-          input.addEventListener('change', onValueChange, false);
-        }
-        return label;
-      });
-
-    labels.forEach(label => container.appendChild(label));
-
-    setTimeout(resolve);
-  });
+  componentDidMount() {
+    this.unsubscribe = optionsStore(this.onOptionsChange);
+  }
 
 
-  const updateValues = () => new Promise(resolve => {
-    const container = document.querySelector(`[data-options]`);
-
-    const inputs = supportedOptions
-      .map(key => container.querySelector(`input[name="${key}"]`))
-      .filter(input => input && input.value !== state.options[input.name]);
-
-    inputs
-      .forEach(input => (input.value = state.options[input.name]))
-
-    setTimeout(resolve);
-  });
+  componentWillUnmount() {
+    this.unsubscribe();
+  }
 
 
-  const render = async () => {
-    await removeUnsupportedOptions();
-    await addMissingOptions();
-    await updateValues();
-  };
+  onOptionsChange(options) {
+    this.setState(options);
+  }
 
 
-  const onOptionsChange = options => {
-    Object.assign(state, {options});
-    render();
-  };
+  render() {
+    const options = this.state;
+    const {asPassword} = this.props;
+
+    return e(F, {},
+      e('h1', {}, 'Options'),
+      Object.keys(options).map(key =>
+        e(Option, {
+          key,
+          name: key,
+          value: options[key],
+          asPassword
+        })));
+  }
+}
 
 
-  optionsStore(onOptionsChange);
-};
+const onLoad = () => ReactDOM.render(e(App, {
+  asPassword: ['token']
+}), document.querySelector('[data-app]'));
 
 
 window.addEventListener('load', onLoad, false);
